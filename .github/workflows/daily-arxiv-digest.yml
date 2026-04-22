@@ -1,0 +1,74 @@
+name: Daily arXiv digest
+
+on:
+  schedule:
+    # 10:30 UTC ≈ 06:30 ET. arXiv announces new papers ~20:00 ET the prior evening,
+    # so this comfortably captures everything from the previous announcement cycle.
+    - cron: '30 10 * * *'
+  workflow_dispatch:
+    inputs:
+      lookback_hours:
+        description: 'Lookback window in hours'
+        required: false
+        default: '30'
+
+# Prevent concurrent runs from racing each other when pushing.
+concurrency:
+  group: daily-arxiv-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # Full history so rebase has something to rebase onto.
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install --upgrade arxiv PyYAML
+
+      - name: Build digest
+        run: |
+          python scripts/arxiv_digest.py \
+            --config config/tracked.yaml \
+            --lookback-hours "${LOOKBACK:-30}" \
+            --min-score 2
+        env:
+          LOOKBACK: ${{ github.event.inputs.lookback_hours }}
+
+      - name: Commit and push digest
+        run: |
+          set -euo pipefail
+          git config user.name 'arxiv-digest-bot'
+          git config user.email 'arxiv-digest-bot@users.noreply.github.com'
+          git add digests/ seen.json
+          if git diff --staged --quiet; then
+            git commit --allow-empty -m "Daily digest $(date -u +%Y-%m-%d) — no changes"
+          else
+            git commit -m "Daily digest $(date -u +%Y-%m-%d)"
+          fi
+          # Push with retry loop. If the remote moved (e.g. concurrent run, or
+          # someone pushed manually), rebase our commit on top and try again.
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "Push succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "Push attempt $attempt failed, fetching and rebasing..."
+            git fetch origin main
+            git rebase --autostash origin/main || {
+              echo "Rebase failed; aborting."
+              git rebase --abort || true
+              exit 1
+            }
+            sleep $((attempt * 5))
+          done
+          echo "Push failed after 5 attempts" >&2
+          exit 1

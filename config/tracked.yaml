@@ -1,0 +1,102 @@
+# Daily arXiv digest configuration.
+# Topic-only matching. Keywords are normalized: lowercased and accent-stripped.
+# Author-level tracking is handled by Gmail Scholar alerts, not this pipeline.
+
+categories:
+  - q-bio.QM      # Quantitative Methods
+  - q-bio.GN      # Genomics
+  - q-bio.PE      # Populations and Evolution
+  - stat.AP       # Statistics - Applications
+
+authors: []  # Deliberately empty — Gmail Scholar alerts handle author tracking.
+
+keywords:
+  # PheWAS / PheRS / phecodes
+  - phewas
+  - phers
+  - phenome-wide
+  - phecode
+  - phenotype risk score
+
+  # Biobanks
+  - all of us
+  - uk biobank
+  - biobank
+
+  # EHR / OMOP / phenotyping
+  - electronic health records
+  - omop
+  - common data model
+  - computable phenotype
+  - clinical phenotyping
+  - ehr phenotyping
+
+  # Causal inference
+  - target trial emulation
+  - propensity score
+  - inverse probability
+  - causal inference
+  - mendelian randomization
+  - g-methods
+  - g-computation
+
+  # Pharmacoepidemiology (drug classes from active research threads)
+  - glp-1
+  - sglt2
+  - trikafta
+  - ivacaftor
+  - hormone replacement therapy
+
+  # Variant interpretation
+  - acmg
+  - intervar
+  - variant classification
+  - variant interpretation
+  - clinvar
+  - loftee
+  - ploof
+  - loss-of-function
+
+  # Genetic epidemiology
+  - gwas
+  - polygenic risk
+  - polygenic score
+  - prs
+  - twas
+  - fine mapping
+  - cross-ancestry
+  - trans-ancestry
+
+  # Specific diseases from tracked threads
+  - cftr
+  - cystic fibrosis
+  - inflammatory bowel disease
+  - apol1
+  - clonal hematopoiesis
+  - chip
+  - vexas
+
+  # EHR foundation models / ML on EHR
+  - foundation model
+  - ehr foundation
+  - clmbr
+  - motor
+  - ehrshot
+  - meds
+  - femr
+  - medtok
+
+  # Knowledge graphs / ontologies
+  - knowledge graph
+  - biomedical ontology
+  - hpo
+  - human phenotype ontology
+  - snomed
+  - phekb
+
+  # Rare disease
+  - rare disease diagnosis
+  - rare variant
+  - ultra-rare
+
+output_dir: digests
