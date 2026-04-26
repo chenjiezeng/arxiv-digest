@@ -39,7 +39,7 @@ jobs:
           python scripts/arxiv_digest.py \
             --config config/tracked.yaml \
             --lookback-hours "${LOOKBACK:-30}" \
-            --min-score 2
+            --min-score 1
         env:
           LOOKBACK: ${{ github.event.inputs.lookback_hours }}
 
