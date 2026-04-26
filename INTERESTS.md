@@ -8,7 +8,7 @@ arxiv-digest. The keyword list in `config/tracked.yaml` controls
 The pipeline runs at `--min-score 1` so the net is wide. Triage
 narrows it to what fits the active research threads below.
 
-Last updated: 2026-04-26.
+Last updated: 2026-04-26 (added ML-for-precision-health and chronic-disease-clustering threads).
 
 ## Active research threads
 
@@ -73,6 +73,23 @@ Lower interest in non-biomedical KG infrastructure.
 ### Rare disease
 Rare-variant association methods, deep phenotyping for rare-disease
 diagnosis (HPO-based), ultra-rare clinical NLP.
+
+### Machine learning for precision health
+Individualized risk prediction, treatment-effect heterogeneity, and
+prognostic modeling grounded in real-world clinical data. Includes
+heterogeneous-treatment-effect methods (causal forests, meta-learners),
+calibration and decision-curve analysis, and external validation across
+sites or ancestries. ML papers are HIGH when they're tied to a
+clinical decision (who to treat, who to screen, when to escalate);
+generic benchmark / leaderboard papers are SKIP.
+
+### Chronic disease clustering and multimorbidity
+Unsupervised and semi-supervised methods for discovering disease
+subtypes, multimorbidity patterns, and disease trajectories from EHR
+or biobank data. Latent class / latent profile analysis, topic models
+on diagnosis sequences, graph-based comorbidity networks, and trajectory
+clustering. Particularly interested when applied to cardiometabolic
+disease, autoimmune disease, or aging-related multimorbidity.
 
 ## Triage rubric
 
