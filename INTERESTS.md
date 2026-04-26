@@ -1,0 +1,88 @@
+# Research interests
+
+This file anchors what I (Claude) read before triaging each new
+arxiv-digest. The keyword list in `config/tracked.yaml` controls
+*recall* (which papers the script surfaces); this file controls
+*triage* (which surfaced papers count as high-priority signal).
+
+The pipeline runs at `--min-score 1` so the net is wide. Triage
+narrows it to what fits the active research threads below.
+
+Last updated: 2026-04-26.
+
+## Active research threads
+
+### PheWAS / phecode infrastructure
+PheWAS and PheRS methodology applied to biobank cohorts, with emphasis
+on calibration, ancestry-aware risk scores, and phecode-based outcome
+definitions. Particular interest in penetrance estimation for monogenic
+variants under population-screening conditions (vs. clinically
+ascertained cohorts).
+
+### Biobanks: All of Us, UK Biobank, MVP
+Real-world phenotype validation, EHR-linked biobank analysis, and
+cross-biobank replication. Methods papers using AoU or UKB are
+high-priority; clinical-question papers using AoU/UKB are medium unless
+they overlap with a tracked disease.
+
+### EHR phenotyping & OMOP
+Computable phenotype development, OMOP-CDM-based studies, and tools
+for clinical phenotyping at scale (LLM-assisted or rules-based).
+Includes NLP / LLM extraction from clinical notes for phecode and HPO
+term assignment.
+
+### Causal inference and pharmacoepidemiology
+Target trial emulation, propensity score / IPW, g-methods, and modern
+causal ML (causal forest, double / debiased ML). Active drug-class
+threads: GLP-1 RAs, SGLT2is, CFTR modulators (Trikafta / ivacaftor),
+hormone replacement therapy. Real-world evidence with explicit
+attention to confounding and selection bias.
+
+### Variant interpretation (ACMG / ClinGen)
+ACMG-AMP variant classification, ClinGen VCEP guidelines, splicing /
+RNA evidence for VUS resolution, and variant curation tooling
+(InterVar, AnFiSA-style DSLs). LOFTEE and pLoF burden methods.
+
+### Genetic epidemiology
+GWAS, PRS / polygenic scores, TWAS, fine-mapping, and cross / trans-
+ancestry portability. Phenome-wide MR, biomarker-as-exposure scans.
+Composite risk models stacking PRS with rare pathogenic variants.
+
+### Specific disease threads
+- **Cystic fibrosis / CFTR**: modulator pharmacoepi, real-world
+  outcomes, modulator eligibility & psychosocial impact.
+- **APOL1**: kidney disease risk, transplant decision-making, ancestry
+  considerations.
+- **Clonal hematopoiesis (CHIP) and VEXAS**: somatic mosaicism,
+  cardiovascular and hematologic outcomes.
+- **Inflammatory bowel disease**: shared with broader autoimmune work.
+
+### EHR foundation models
+CLMBR, MOTOR, EHRSHOT, MedTok, FEMR, MEDS lineage. Multimodal EHR FMs
+(notes + codes + waveforms + imaging). Foundation-model fairness and
+calibration audits when grounded in EHR data.
+
+### Knowledge graphs & ontologies
+HPO, SNOMED, biomedical KG construction for clinical reasoning.
+Lower interest in non-biomedical KG infrastructure.
+
+### Rare disease
+Rare-variant association methods, deep phenotyping for rare-disease
+diagnosis (HPO-based), ultra-rare clinical NLP.
+
+## Triage rubric
+
+For each surfaced paper I'll assign one of three buckets:
+
+- **HIGH** — directly serves an active thread above. Read first.
+- **METHODS-WATCH** — off-topic disease but exemplary methods worth
+  cribbing (e.g., causal-ML pipelines, large-cohort design choices).
+- **SKIP** — incidental keyword hit, not worth attention.
+
+## How to update
+
+When research priorities shift, edit the relevant section above (or
+add a new one) and commit — I read this file at the start of each
+triage. A one-line nudge in chat ("drop the autism thread, add MVP
+veterans cohort work") is also fine; I'll mirror the change back into
+this file so the anchor stays current.
