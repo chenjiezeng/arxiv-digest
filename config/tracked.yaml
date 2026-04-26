@@ -39,6 +39,9 @@ keywords:
   - mendelian randomization
   - g-methods
   - g-computation
+  - causal forest
+  - double machine learning
+  - debiased machine learning
 
   # Pharmacoepidemiology (drug classes from active research threads)
   - glp-1
@@ -52,6 +55,8 @@ keywords:
   - intervar
   - variant classification
   - variant interpretation
+  - variant curation
+  - clingen
   - clinvar
   - loftee
   - ploof
@@ -61,11 +66,13 @@ keywords:
   - gwas
   - polygenic risk
   - polygenic score
+  - polygenic
   - prs
   - twas
   - fine mapping
   - cross-ancestry
   - trans-ancestry
+  - quantitative phenotype
 
   # Specific diseases from tracked threads
   - cftr
