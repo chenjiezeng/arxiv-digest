@@ -106,4 +106,16 @@ keywords:
   - rare variant
   - ultra-rare
 
+  # ML for precision health
+  - precision health
+  - precision medicine
+  - treatment effect heterogeneity
+  - heterogeneous treatment effects
+  - patient stratification
+
+  # Chronic disease clustering / multimorbidity
+  - multimorbidity
+  - disease trajectory
+  - latent class
+
 output_dir: digests
