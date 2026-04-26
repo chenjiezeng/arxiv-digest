@@ -19,11 +19,15 @@ definitions. Particular interest in penetrance estimation for monogenic
 variants under population-screening conditions (vs. clinically
 ascertained cohorts).
 
-### Biobanks: All of Us, UK Biobank, MVP
-Real-world phenotype validation, EHR-linked biobank analysis, and
-cross-biobank replication. Methods papers using AoU or UKB are
-high-priority; clinical-question papers using AoU/UKB are medium unless
-they overlap with a tracked disease.
+### Biobanks with EHR linkage: All of Us, UK Biobank, MVP, BioVU
+EHR-linked biobank analysis is a core theme — anything that combines
+genomic data with longitudinal real-world clinical records is
+high-priority. This includes phenotype validation against EHR-derived
+outcomes, ancestry-stratified risk in EHR-linked cohorts, and methods
+that exploit the depth of EHR follow-up (medications, labs, imaging
+codes) for genetic studies. Methods papers using AoU / UKB / MVP /
+BioVU are high-priority; clinical-question papers using these cohorts
+are medium unless they overlap with a tracked disease.
 
 ### EHR phenotyping & OMOP
 Computable phenotype development, OMOP-CDM-based studies, and tools
