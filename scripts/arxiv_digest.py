@@ -133,18 +133,29 @@ def score_paper(
 # Fetch
 # --------------------------------------------------------------------------- #
 
-def fetch_papers(cfg: Config, lookback_hours: float) -> list[arxiv.Result]:
+def fetch_papers(
+    cfg: Config, lookback_hours: float
+) -> tuple[list[arxiv.Result], list[str]]:
     """Fetch newly submitted papers across categories within lookback window.
 
     Conservative on arXiv API: 5s between requests, only 2 retries (since most
     failures here are rate-limiting and retrying immediately makes it worse),
     and a 15s pause between categories. If a category 429s, we log and skip
     rather than crashing the whole run.
+
+    Returns (papers, failed_categories) so the caller can distinguish a
+    genuine empty day from a silent fetch failure.
     """
     client = arxiv.Client(page_size=100, delay_seconds=5.0, num_retries=2)
+    # arXiv 403s default urllib UAs ("Python-urllib/3.x"). Identify ourselves
+    # so requests aren't fingerprinted as an unauthenticated bot.
+    client._session.headers["User-Agent"] = (
+        "arxiv-digest/1.0 (+https://github.com/chenjiezeng/arxiv-digest)"
+    )
     cutoff = datetime.now(timezone.utc) - timedelta(hours=lookback_hours)
     seen: set[str] = set()
     papers: list[arxiv.Result] = []
+    failed: list[str] = []
 
     for cat in cfg.categories:
         search = arxiv.Search(
@@ -167,10 +178,11 @@ def fetch_papers(cfg: Config, lookback_hours: float) -> list[arxiv.Result]:
                 f"WARN: arXiv API error fetching {cat}: {e}. Skipping category.",
                 file=sys.stderr,
             )
+            failed.append(cat)
         # Longer pause between categories — arXiv 429s are sticky.
         time.sleep(15)
 
-    return papers
+    return papers, failed
 
 
 # --------------------------------------------------------------------------- #
@@ -178,7 +190,9 @@ def fetch_papers(cfg: Config, lookback_hours: float) -> list[arxiv.Result]:
 # --------------------------------------------------------------------------- #
 
 def format_markdown(
-    scored: list[tuple[arxiv.Result, int, list[str], list[str]]], cfg: Config
+    scored: list[tuple[arxiv.Result, int, list[str], list[str]]],
+    cfg: Config,
+    failed_categories: list[str] | None = None,
 ) -> str:
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     lines = [
@@ -188,6 +202,13 @@ def format_markdown(
         f"Relevant papers: {len(scored)}",
         "",
     ]
+    if failed_categories:
+        lines.append(
+            f"> WARNING: {len(failed_categories)}/{len(cfg.categories)} "
+            f"categories failed to fetch ({', '.join(failed_categories)}); "
+            f"results may be incomplete."
+        )
+        lines.append("")
     if not scored:
         lines.append("_No matches in the lookback window._")
         lines.append("")
@@ -281,8 +302,19 @@ def main() -> int:
         f"Fetching {len(cfg.categories)} categories, lookback {args.lookback_hours}h",
         file=sys.stderr,
     )
-    papers = fetch_papers(cfg, args.lookback_hours)
+    papers, failed_categories = fetch_papers(cfg, args.lookback_hours)
     print(f"Fetched {len(papers)} candidate papers", file=sys.stderr)
+
+    # If every category failed, an empty digest would be a silent lie. Fail
+    # loud so the workflow turns red and the issue gets noticed instead of
+    # accumulating "no matches" days that mask a broken fetch.
+    if failed_categories and len(failed_categories) == len(cfg.categories):
+        print(
+            f"ERROR: all {len(cfg.categories)} categories failed to fetch — "
+            f"refusing to write a misleading empty digest.",
+            file=sys.stderr,
+        )
+        return 1
 
     # Score everything that meets the threshold, tracking which were seen before.
     matched: list[tuple[arxiv.Result, int, list[str], list[str]]] = []
@@ -306,7 +338,7 @@ def main() -> int:
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     out = cfg.output_dir / f"{today}.md"
-    md = format_markdown(new_papers, cfg)
+    md = format_markdown(new_papers, cfg, failed_categories)
     if suppressed > 0:
         # Add a transparency note to the header.
         md = md.replace(
