@@ -10,7 +10,7 @@ on:
       lookback_hours:
         description: 'Lookback window in hours'
         required: false
-        default: '30'
+        default: '168'
 
 # Prevent concurrent runs from racing each other when pushing.
 concurrency:
