@@ -8,7 +8,7 @@ arxiv-digest. The keyword list in `config/tracked.yaml` controls
 The pipeline runs at `--min-score 1` so the net is wide. Triage
 narrows it to what fits the active research threads below.
 
-Last updated: 2026-04-26 (added ML-for-precision-health and chronic-disease-clustering threads).
+Last updated: 2026-04-27 (added clinical-prediction-models and interpretability/surrogate-LLM threads).
 
 ## Active research threads
 
@@ -90,6 +90,30 @@ or biobank data. Latent class / latent profile analysis, topic models
 on diagnosis sequences, graph-based comorbidity networks, and trajectory
 clustering. Particularly interested when applied to cardiometabolic
 disease, autoimmune disease, or aging-related multimorbidity.
+
+### Clinical prediction models
+Development, validation, and deployment of clinical risk-prediction
+and prognostic models. Emphasis on rigorous methodology: TRIPOD-style
+reporting, calibration (not just discrimination), decision-curve
+analysis, external / temporal validation across sites and ancestries,
+and updating / recalibration over time. Includes both classical
+regression-based scores (nomograms, Cox / Fine–Gray) and modern ML
+(gradient boosting, deep nets, foundation-model-derived scores), with
+special attention to models tied to a concrete clinical decision —
+who to treat, who to screen, when to escalate — rather than benchmark-
+only papers.
+
+### Interpretability and surrogate models for clinical AI / LLMs
+Methods that make black-box predictors (deep nets, transformers,
+clinical LLMs) interpretable enough for clinical adoption: surrogate
+modeling, post-hoc explanations (SHAP / LIME-style), mechanistic
+interpretability (feature attribution, probing, sparse autoencoders),
+and prompt / output auditing for clinical LLMs. High priority when
+applied to medical predictions, EHR-grounded tasks, or biobank-derived
+outcomes — e.g., the recent Han et al. *"Surrogate modeling for
+interpreting black-box LLMs in medical predictions"* (Celi group,
+arXiv 2026) is the canonical fit. Lower interest in interpretability
+work on non-clinical domains.
 
 ## Triage rubric
 

@@ -118,4 +118,23 @@ keywords:
   - disease trajectory
   - latent class
 
+  # Clinical prediction models
+  - prediction model
+  - clinical prediction
+  - risk prediction
+  - prognostic model
+  - clinical decision support
+  - decision curve
+  - nomogram
+  - model calibration
+  - external validation
+
+  # Interpretability / surrogate modeling for clinical ML & LLMs
+  - surrogate model
+  - explainable ai
+  - interpretable machine learning
+  - model interpretability
+  - post-hoc explanation
+  - black-box model
+
 output_dir: digests
