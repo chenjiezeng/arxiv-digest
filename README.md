@@ -34,6 +34,24 @@ Default `--min-score 2` requires at least two keyword hits, which filters
 out papers that incidentally mention one of your terms but aren't really
 about it.
 
+## Deep summaries for priority papers
+
+Papers scoring at or above `--deep-score` (default 4) get an extra
+auto-extracted block appended below the abstract: `arxiv.org/html/<id>`
+is fetched and section headings (Introduction / Methods / Results /
+Discussion / Conclusion / Limitations) plus the first paragraph under each
+are inlined into the digest.
+
+This step is best-effort — if the HTML render is missing, the page 404s,
+or parsing fails, the paper falls back to the abstract-only rendering and
+the run keeps going. Politeness pause: 2 s between consecutive fetches.
+
+Flags:
+
+- `--deep-score N` — score threshold above which deep summaries fire (default 4).
+- `--no-deep` — disable entirely (e.g. for offline testing or rate-limited days).
+- `--deep-timeout SEC` — per-paper HTTP timeout (default 15).
+
 ## API politeness
 
 arXiv's API rate-limits aggressively. The fetcher uses a 5-second client
@@ -68,6 +86,9 @@ Useful flags:
 
 - `--lookback-hours N` — window size. Default 30.
 - `--min-score N` — drop papers below this score. Default 2.
+- `--deep-score N` — fetch full-text section snippets for papers ≥ N. Default 4.
+- `--no-deep` — disable deep-summary fetching.
+- `--deep-timeout SEC` — per-paper HTTP timeout for deep-summary fetch. Default 15.
 
 ## Editing tracked topics
 
