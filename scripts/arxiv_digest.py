@@ -14,12 +14,18 @@ import re
 import sys
 import time
 import unicodedata
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 
 import arxiv
 import yaml
+
+
+USER_AGENT = "arxiv-digest/1.0 (+https://github.com/chenjiezeng/arxiv-digest)"
 
 
 # --------------------------------------------------------------------------- #
@@ -130,6 +136,142 @@ def score_paper(
 
 
 # --------------------------------------------------------------------------- #
+# Deep summary (full-text section harvest for priority papers)
+# --------------------------------------------------------------------------- #
+
+# Headings worth surfacing from the rendered arXiv HTML. Matched case-
+# insensitively as substrings against the heading text.
+_INTERESTING_HEADINGS = (
+    "introduction",
+    "background",
+    "data",
+    "cohort",
+    "method",
+    "approach",
+    "model",
+    "result",
+    "finding",
+    "experiment",
+    "benchmark",
+    "discussion",
+    "conclusion",
+    "limitation",
+)
+
+# Per-section snippet cap (chars) and total sections cap.
+_DEEP_SECTION_CHARS = 600
+_DEEP_MAX_SECTIONS = 6
+
+
+class _SectionExtractor(HTMLParser):
+    """Harvest (heading, opening-paragraph) pairs from arXiv HTML.
+
+    The arXiv HTML render uses <h2>/<h3> for section/subsection headings
+    followed by <p> bodies. We capture each heading and the first paragraph
+    of running text below it (capped at _DEEP_SECTION_CHARS).
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.sections: list[tuple[str, str]] = []
+        self._heading_buf: list[str] = []
+        self._body_buf: list[str] = []
+        self._cur_heading: str | None = None
+        self._in_heading = False
+        self._in_para = False
+        self._body_chars = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("h1", "h2", "h3"):
+            self._flush()
+            self._in_heading = True
+            self._heading_buf = []
+        elif tag == "p" and self._cur_heading and self._body_chars < _DEEP_SECTION_CHARS:
+            self._in_para = True
+
+    def handle_endtag(self, tag):
+        if tag in ("h1", "h2", "h3"):
+            self._in_heading = False
+            self._cur_heading = "".join(self._heading_buf).strip()
+            self._body_buf = []
+            self._body_chars = 0
+        elif tag == "p":
+            self._in_para = False
+            if self._body_buf and not self._body_buf[-1].endswith(" "):
+                self._body_buf.append(" ")
+
+    def handle_data(self, data):
+        if self._in_heading:
+            self._heading_buf.append(data)
+        elif self._in_para and self._body_chars < _DEEP_SECTION_CHARS:
+            remaining = _DEEP_SECTION_CHARS - self._body_chars
+            chunk = data[:remaining]
+            self._body_buf.append(chunk)
+            self._body_chars += len(chunk)
+
+    def _flush(self) -> None:
+        if self._cur_heading:
+            body = "".join(self._body_buf).strip()
+            if body:
+                self.sections.append((self._cur_heading, body))
+        self._cur_heading = None
+        self._body_buf = []
+        self._body_chars = 0
+
+    def close(self) -> None:
+        super().close()
+        self._flush()
+
+
+def _arxiv_html_url(arxiv_id: str) -> str:
+    return f"https://arxiv.org/html/{arxiv_id}"
+
+
+def fetch_deep_summary(arxiv_id: str, *, timeout: float = 15.0) -> str | None:
+    """Fetch arXiv HTML for `arxiv_id` and extract a markdown deep-summary block.
+
+    Returns None on any failure — empty HTML, non-200, parse error, or no
+    interesting sections found. The caller should treat this as best-effort
+    enrichment, not a hard requirement.
+    """
+    url = _arxiv_html_url(arxiv_id)
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            if r.status != 200:
+                return None
+            html = r.read().decode("utf-8", errors="replace")
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        print(f"WARN: deep-summary fetch failed for {arxiv_id}: {e}", file=sys.stderr)
+        return None
+
+    parser = _SectionExtractor()
+    try:
+        parser.feed(html)
+        parser.close()
+    except Exception as e:
+        print(f"WARN: deep-summary parse failed for {arxiv_id}: {e}", file=sys.stderr)
+        return None
+
+    selected: list[tuple[str, str]] = []
+    for heading, body in parser.sections:
+        if any(k in heading.lower() for k in _INTERESTING_HEADINGS):
+            selected.append((heading, body))
+        if len(selected) >= _DEEP_MAX_SECTIONS:
+            break
+    if not selected:
+        return None
+
+    lines = ["**Deep summary (auto-extracted from full text):**", ""]
+    for heading, body in selected:
+        snippet = body.rstrip()
+        if len(snippet) >= _DEEP_SECTION_CHARS:
+            snippet = snippet.rstrip(" .,;:") + "…"
+        lines.extend([f"_{heading}_", "", snippet, ""])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+# --------------------------------------------------------------------------- #
 # Fetch
 # --------------------------------------------------------------------------- #
 
@@ -149,9 +291,7 @@ def fetch_papers(
     client = arxiv.Client(page_size=100, delay_seconds=5.0, num_retries=2)
     # arXiv 403s default urllib UAs ("Python-urllib/3.x"). Identify ourselves
     # so requests aren't fingerprinted as an unauthenticated bot.
-    client._session.headers["User-Agent"] = (
-        "arxiv-digest/1.0 (+https://github.com/chenjiezeng/arxiv-digest)"
-    )
+    client._session.headers["User-Agent"] = USER_AGENT
     cutoff = datetime.now(timezone.utc) - timedelta(hours=lookback_hours)
     seen: set[str] = set()
     papers: list[arxiv.Result] = []
@@ -193,6 +333,7 @@ def format_markdown(
     scored: list[tuple[arxiv.Result, int, list[str], list[str]]],
     cfg: Config,
     failed_categories: list[str] | None = None,
+    deep_summaries: dict[str, str] | None = None,
 ) -> str:
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     lines = [
@@ -240,6 +381,12 @@ def format_markdown(
         lines.append("")
         lines.append(paper.summary.strip())
         lines.append("")
+        if deep_summaries:
+            base_id = _arxiv_base_id(paper.entry_id)
+            block = deep_summaries.get(base_id)
+            if block:
+                lines.append(block)
+                lines.append("")
         lines.append("---")
         lines.append("")
     return "\n".join(lines)
@@ -295,6 +442,24 @@ def main() -> int:
         help="Path to JSON cache of arXiv IDs already surfaced. "
         "Pass /dev/null to disable deduplication.",
     )
+    ap.add_argument(
+        "--deep-score",
+        type=int,
+        default=4,
+        help="Score threshold above which papers get a full-text deep summary "
+        "fetched from arxiv.org/html/<id>. Default 4 (≥4 keyword hits).",
+    )
+    ap.add_argument(
+        "--no-deep",
+        action="store_true",
+        help="Disable deep-summary fetching entirely (e.g. for offline testing).",
+    )
+    ap.add_argument(
+        "--deep-timeout",
+        type=float,
+        default=15.0,
+        help="Per-paper HTTP timeout for deep-summary fetch, in seconds.",
+    )
     args = ap.parse_args()
 
     cfg = load_config(args.config)
@@ -335,10 +500,32 @@ def main() -> int:
 
     # Sort and write the digest.
     new_papers.sort(key=lambda t: (-t[1], -t[0].published.timestamp()))
+
+    # For papers above --deep-score, fetch the rendered HTML and harvest
+    # section-level snippets. Best-effort: any failure falls back to the
+    # abstract-only rendering.
+    deep_summaries: dict[str, str] = {}
+    if not args.no_deep:
+        priority = [t for t in new_papers if t[1] >= args.deep_score]
+        if priority:
+            print(
+                f"Fetching deep summaries for {len(priority)} priority papers "
+                f"(score ≥ {args.deep_score})",
+                file=sys.stderr,
+            )
+        for i, (paper, _, _, _) in enumerate(priority):
+            base_id = _arxiv_base_id(paper.entry_id)
+            block = fetch_deep_summary(base_id, timeout=args.deep_timeout)
+            if block:
+                deep_summaries[base_id] = block
+            # Polite pause between HTML fetches; arxiv.org throttles aggressively.
+            if i < len(priority) - 1:
+                time.sleep(2)
+
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     out = cfg.output_dir / f"{today}.md"
-    md = format_markdown(new_papers, cfg, failed_categories)
+    md = format_markdown(new_papers, cfg, failed_categories, deep_summaries)
     if suppressed > 0:
         # Add a transparency note to the header.
         md = md.replace(
