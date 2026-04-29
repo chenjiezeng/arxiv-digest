@@ -7,6 +7,9 @@ categories:
   - q-bio.GN      # Genomics
   - q-bio.PE      # Populations and Evolution
   - stat.AP       # Statistics - Applications
+  - cs.LG         # Machine Learning — catches EHR-FM, causal-ML tooling
+  - cs.CL         # Computation and Language — clinical NLP, LLM phenotyping
+  - cs.AI         # Artificial Intelligence — clinical decision support, KG reasoning
 
 authors: []  # Deliberately empty — Gmail Scholar alerts handle author tracking.
 
