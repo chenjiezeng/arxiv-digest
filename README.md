@@ -1,8 +1,9 @@
 # Daily arXiv digest
 
 Nightly GitHub Action that pulls new submissions from `q-bio.QM`, `q-bio.GN`,
-`q-bio.PE`, and `stat.AP`, scores each paper against a list of topic keywords,
-and commits a ranked markdown digest to `digests/YYYY-MM-DD.md`.
+`q-bio.PE`, `stat.AP`, `cs.LG`, `cs.CL`, and `cs.AI`, scores each paper against
+a list of topic keywords, and commits a ranked markdown digest to
+`digests/YYYY-MM-DD.md`.
 
 ## Files
 
@@ -57,8 +58,11 @@ Flags:
 arXiv's API rate-limits aggressively. The fetcher uses a 5-second client
 delay (above arXiv's 3-second recommendation), only 2 retries (since most
 failures are rate-limit and retrying immediately makes them worse), and
-a 15-second pause between categories. If a single category 429s, the run
-logs a warning and skips it rather than crashing.
+a 15-second pause between categories. After the first pass, any failed
+categories get one second-pass retry with a 60-second warm-up — sticky
+429s usually clear within ~1 minute. Categories still failing after the
+retry pass are reported in the digest header so the empty-day case is
+distinguishable from a fetch outage.
 
 ## Push robustness
 

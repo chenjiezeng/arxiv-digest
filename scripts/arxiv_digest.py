@@ -275,6 +275,44 @@ def fetch_deep_summary(arxiv_id: str, *, timeout: float = 15.0) -> str | None:
 # Fetch
 # --------------------------------------------------------------------------- #
 
+def _fetch_category(
+    client: arxiv.Client,
+    cat: str,
+    cutoff: datetime,
+    seen: set[str],
+    papers: list[arxiv.Result],
+) -> bool:
+    """Fetch one category. Returns True on success, False on any error.
+
+    Mutates `seen` and `papers` in place. Catches a broad `Exception` because
+    the arxiv client surfaces several non-overlapping error types
+    (`HTTPError`, `UnexpectedEmptyPageError`, raw `requests.exceptions.*`,
+    `xml.etree.ElementTree.ParseError`) and we want to keep going regardless.
+    """
+    search = arxiv.Search(
+        query=f"cat:{cat}",
+        max_results=500,
+        sort_by=arxiv.SortCriterion.SubmittedDate,
+        sort_order=arxiv.SortOrder.Descending,
+    )
+    try:
+        for result in client.results(search):
+            if result.published < cutoff:
+                break
+            base_id = result.entry_id.rsplit("/", 1)[-1].split("v")[0]
+            if base_id in seen:
+                continue
+            seen.add(base_id)
+            papers.append(result)
+        return True
+    except Exception as e:
+        print(
+            f"WARN: arXiv fetch failed for {cat}: {type(e).__name__}: {e}",
+            file=sys.stderr,
+        )
+        return False
+
+
 def fetch_papers(
     cfg: Config, lookback_hours: float
 ) -> tuple[list[arxiv.Result], list[str]]:
@@ -282,8 +320,9 @@ def fetch_papers(
 
     Conservative on arXiv API: 5s between requests, only 2 retries (since most
     failures here are rate-limiting and retrying immediately makes it worse),
-    and a 15s pause between categories. If a category 429s, we log and skip
-    rather than crashing the whole run.
+    and a 15s pause between categories. After the first pass, any failed
+    categories get one second-pass retry with a 60s warm-up — sticky 429s
+    usually clear within ~1min.
 
     Returns (papers, failed_categories) so the caller can distinguish a
     genuine empty day from a silent fetch failure.
@@ -298,29 +337,26 @@ def fetch_papers(
     failed: list[str] = []
 
     for cat in cfg.categories:
-        search = arxiv.Search(
-            query=f"cat:{cat}",
-            max_results=500,
-            sort_by=arxiv.SortCriterion.SubmittedDate,
-            sort_order=arxiv.SortOrder.Descending,
-        )
-        try:
-            for result in client.results(search):
-                if result.published < cutoff:
-                    break
-                base_id = result.entry_id.rsplit("/", 1)[-1].split("v")[0]
-                if base_id in seen:
-                    continue
-                seen.add(base_id)
-                papers.append(result)
-        except arxiv.HTTPError as e:
-            print(
-                f"WARN: arXiv API error fetching {cat}: {e}. Skipping category.",
-                file=sys.stderr,
-            )
+        if not _fetch_category(client, cat, cutoff, seen, papers):
             failed.append(cat)
         # Longer pause between categories — arXiv 429s are sticky.
         time.sleep(15)
+
+    if failed:
+        print(
+            f"Retrying {len(failed)} failed categories after 60s backoff: "
+            f"{', '.join(failed)}",
+            file=sys.stderr,
+        )
+        time.sleep(60)
+        still_failed: list[str] = []
+        for cat in failed:
+            if _fetch_category(client, cat, cutoff, seen, papers):
+                print(f"Recovered {cat} on retry.", file=sys.stderr)
+            else:
+                still_failed.append(cat)
+            time.sleep(15)
+        failed = still_failed
 
     return papers, failed
 
