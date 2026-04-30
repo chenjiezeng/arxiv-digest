@@ -8,7 +8,7 @@ arxiv-digest. The keyword list in `config/tracked.yaml` controls
 The pipeline runs at `--min-score 1` so the net is wide. Triage
 narrows it to what fits the active research threads below.
 
-Last updated: 2026-04-26 (added ML-for-precision-health and chronic-disease-clustering threads).
+Last updated: 2026-04-30 (added drug-repurposing thread).
 
 ## Active research threads
 
@@ -69,6 +69,18 @@ calibration audits when grounded in EHR data.
 ### Knowledge graphs & ontologies
 HPO, SNOMED, biomedical KG construction for clinical reasoning.
 Lower interest in non-biomedical KG infrastructure.
+
+### Drug repurposing
+Computational identification of new indications for approved drugs.
+High-priority angles: knowledge-graph / GNN approaches with
+*explainable* hypothesis output (path or subgraph rationales rather
+than opaque link-prediction scores); EHR-based repurposing signals
+mined from real-world prescribing and outcomes; causal-inference
+framings of off-label use (target-trial emulation of repurposing
+candidates); and rare-disease repurposing where HPO-based phenotype
+matching connects to candidate compounds. Lower interest in
+target-only or chemistry-only pipelines without a clinical-evidence
+loop.
 
 ### Rare disease
 Rare-variant association methods, deep phenotyping for rare-disease
