@@ -304,21 +304,43 @@ def fetch_papers(
             sort_by=arxiv.SortCriterion.SubmittedDate,
             sort_order=arxiv.SortOrder.Descending,
         )
+        cat_count = 0
+        # arXiv occasionally returns results slightly out of submitted-date
+        # order (cross-listings, v2/v3 reclassifications keep their original
+        # `published` date). Stop only after K consecutive old results so a
+        # single old straggler at the top of the page doesn't truncate the
+        # window prematurely.
+        old_streak = 0
+        OLD_STREAK_LIMIT = 10
         try:
             for result in client.results(search):
                 if result.published < cutoff:
-                    break
+                    old_streak += 1
+                    if old_streak >= OLD_STREAK_LIMIT:
+                        break
+                    continue
+                old_streak = 0
                 base_id = result.entry_id.rsplit("/", 1)[-1].split("v")[0]
                 if base_id in seen:
                     continue
                 seen.add(base_id)
                 papers.append(result)
-        except arxiv.HTTPError as e:
+                cat_count += 1
+        except (arxiv.HTTPError, arxiv.UnexpectedEmptyPageError, urllib.error.URLError) as e:
             print(
                 f"WARN: arXiv API error fetching {cat}: {e}. Skipping category.",
                 file=sys.stderr,
             )
             failed.append(cat)
+        else:
+            # Distinguish "API succeeded, genuinely zero submissions" from a
+            # silent-empty rate-limit response. The caller can't tell from
+            # `papers` alone, so emit a per-category signal.
+            if cat_count == 0:
+                print(
+                    f"WARN: category {cat} returned 0 results within lookback.",
+                    file=sys.stderr,
+                )
         # Longer pause between categories — arXiv 429s are sticky.
         time.sleep(15)
 
