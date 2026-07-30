@@ -8,7 +8,12 @@ arxiv-digest. The keyword list in `config/tracked.yaml` controls
 The pipeline runs at `--min-score 1` so the net is wide. Triage
 narrows it to what fits the active research threads below.
 
-Last updated: 2026-04-30 (added drug-repurposing thread).
+Last updated: 2026-07-29 (added agentic/federated causal-inference
+sub-threads, expanded PGS composite-risk framing with polygenic-deviation
+and GxE, added LOY under somatic mosaicism, added LLM-agent HPO-diagnosis
+benchmarking and pre-symptomatic phenoconversion trajectories under rare
+disease, added digital-twins-from-EHR under EHR foundation models, added
+pharmacogenomic-modifier-of-medication-persistence under pharmacoepi).
 
 ## Active research threads
 
@@ -41,6 +46,22 @@ causal ML (causal forest, double / debiased ML). Active drug-class
 threads: GLP-1 RAs, SGLT2is, CFTR modulators (Trikafta / ivacaftor),
 hormone replacement therapy. Real-world evidence with explicit
 attention to confounding and selection bias.
+Rising sub-threads I want the digest to prioritize:
+- **Agentic / human-in-the-loop observational-causal-inference
+  pipelines** (`oci-agent` Chou/Kallus arXiv 2607.22443, Netflix in
+  production; EHR-derived HTE for trial design Li et al. arXiv
+  2607.16934). Automating covariate-balance / PS-trimming / sensitivity
+  analysis so the human focuses on assumptions and interpretation.
+- **Federated / privacy-preserving EHR causal analytics** (distributed
+  mediation, cross-network TTE) — the Jang et al. arXiv 2607.17958
+  design pattern.
+- **Pharmacogenomic modifiers of medication persistence** — real-world
+  discontinuation / MPR as an outcome modulated by CYP2D6 /
+  metabolizer-phenotype PGx (Cohen et al. *Pharmaceuticals* 2026;
+  Psy-PGx UKB lineage). Portable to CFTR-modulator persistence,
+  statin discontinuation, HRT persistence, GLP-1 RA persistence.
+- **Drug-target Mendelian randomisation triangulated with observational
+  cohort estimates** (Saxby et al. metformin × AAA; MR-ALasso lineage).
 
 ### Variant interpretation (ACMG / ClinGen)
 ACMG-AMP variant classification, ClinGen VCEP guidelines, splicing /
@@ -51,20 +72,54 @@ RNA evidence for VUS resolution, and variant curation tooling
 GWAS, PRS / polygenic scores, TWAS, fine-mapping, and cross / trans-
 ancestry portability. Phenome-wide MR, biomarker-as-exposure scans.
 Composite risk models stacking PRS with rare pathogenic variants.
+Expanded composite-risk / PGS-tails framing I want the digest to
+prioritize:
+- **PGS residuals / polygenic-deviation designs** as a discovery lever
+  for pathogenic rare variants — the Baya *AJHG* 2026 "misaligned
+  individuals" framing, perpendicular to Souaiaia *Nature* PGS-tails
+  and Vazquez *Genetics* low-risk-group designs. Together the three
+  give a "tails-and-residuals" taxonomy of PGS as a discovery
+  instrument.
+- **GxE and PGS × exposure / environment interactions** (Nagpal &
+  Gibson *Nature Genetics* 2026 on pervasive PGS × exposure
+  interactions; GxE reframes PGS portability).
+- **Multi-omics-augmented PRS** (Nightingale NMR / Olink proteomics /
+  metabolomics stacked with PGS for lipid, cardiometabolic, and
+  psychiatric traits; Shan et al. UKB 2026; Feng et al. cross-ancestry
+  IDP pleiotropy for depression).
+- **Pangenome-informed variant calling and its downstream PGS-portability
+  consequences** (HPRC v2 update — reference-bias reduction as a
+  cross-ancestry portability lever).
+- **Cross-trait shared genetic architecture and multi-trait
+  triangulation** (MiXeR / conditional-FDR family; Kopal et al.
+  brain-imaging × mental health × cardiometabolic).
 
 ### Specific disease threads
 - **Cystic fibrosis / CFTR**: modulator pharmacoepi, real-world
   outcomes, modulator eligibility & psychosocial impact.
 - **APOL1**: kidney disease risk, transplant decision-making, ancestry
   considerations.
-- **Clonal hematopoiesis (CHIP) and VEXAS**: somatic mosaicism,
-  cardiovascular and hematologic outcomes.
+- **Clonal hematopoiesis (CHIP), VEXAS, and mosaic Loss of Y (LOY)**:
+  somatic mosaicism generally, with an active watch on the male-specific
+  LOY analogue of CHIP (Li et al. *Atherosclerosis* 2026 LOY × PAD;
+  Loh *Nature* 2018, Kessler *Nature* 2022 lineage). Cardiovascular and
+  hematologic outcomes for both; also somatic-mutation contamination
+  of germline rare-variant scans (Ji et al. *Biology* 2026 QC layer)
+  as a downstream confounder to guard against.
 - **Inflammatory bowel disease**: shared with broader autoimmune work.
 
 ### EHR foundation models
 CLMBR, MOTOR, EHRSHOT, MedTok, FEMR, MEDS lineage. Multimodal EHR FMs
 (notes + codes + waveforms + imaging). Foundation-model fairness and
-calibration audits when grounded in EHR data.
+calibration audits when grounded in EHR data. Rising sub-threads:
+- **Digital twins from EHR data** — Zhang / Ideker / Oermann *Cell*
+  2026 (International Consortium of Digital Twins in Healthcare and
+  Medicine) as the field-defining framing reference; individualized
+  trajectory prediction as the endgame of EHR-FM work.
+- **Pretraining-contamination audits for foundation-model
+  benchmarks** — scContam (Ali arXiv 2607.20572) and MIA-scFM
+  membership-inference protocols are portable templates for auditing
+  CLMBR / MOTOR / MEDS benchmark contamination.
 
 ### Knowledge graphs & ontologies
 HPO, SNOMED, biomedical KG construction for clinical reasoning.
@@ -84,7 +139,22 @@ loop.
 
 ### Rare disease
 Rare-variant association methods, deep phenotyping for rare-disease
-diagnosis (HPO-based), ultra-rare clinical NLP.
+diagnosis (HPO-based), ultra-rare clinical NLP. Rising sub-threads:
+- **Auditable HPO-driven diagnostic benchmarks with separable
+  metrics for ranking vs. evidence coverage** — GraphRareBench
+  (Guo et al. arXiv 2607.24878) as the reference-benchmark update;
+  the 22–44% "Hit@10 hides ranking-of-confounders" observation is a
+  QC argument I want propagated across Phenolyzer / Phen2Gene /
+  PhenoSV / LIRICAL / Exomiser / PhenoGPT2 benchmarking.
+- **Pre-symptomatic carrier phenoconversion prediction from
+  longitudinal biomarker trajectories** — Ran / Benatar *Nature
+  Medicine* 2026 for ALS as the template. Directly portable to
+  BRCA incident-cancer prediction, HTT preclinical HD, APOL1 CKD
+  conversion, and hereditary-cancer syndromes with UKB Olink /
+  AoU proteomics.
+- **Data-driven reanalysis of unsolved cases at 10k+ cohort scale**
+  — Uria-Regojo et al. medRxiv 2026 as the mid-scale reference
+  between single-center reanalysis and biobank-scale approaches.
 
 ### Machine learning for precision health
 Individualized risk prediction, treatment-effect heterogeneity, and
