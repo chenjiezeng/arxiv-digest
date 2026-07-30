@@ -13,7 +13,9 @@ sub-threads, expanded PGS composite-risk framing with polygenic-deviation
 and GxE, added LOY under somatic mosaicism, added LLM-agent HPO-diagnosis
 benchmarking and pre-symptomatic phenoconversion trajectories under rare
 disease, added digital-twins-from-EHR under EHR foundation models, added
-pharmacogenomic-modifier-of-medication-persistence under pharmacoepi).
+pharmacogenomic-modifier-of-medication-persistence under pharmacoepi;
+added a dedicated `Knowledge representation in EHRs and applications`
+thread bridging EHR foundation models and KG/ontology threads).
 
 ## Active research threads
 
@@ -120,6 +122,57 @@ calibration audits when grounded in EHR data. Rising sub-threads:
   benchmarks** — scContam (Ali arXiv 2607.20572) and MIA-scFM
   membership-inference protocols are portable templates for auditing
   CLMBR / MOTOR / MEDS benchmark contamination.
+
+### Knowledge representation in EHRs and applications
+How structured and unstructured clinical data get encoded, aligned,
+and made computable — and what those representations enable
+downstream. Covers concept-level, structural, temporal, and
+graph-level representation choices, plus their fitness for
+phenotyping, cohort discovery, drug safety, prediction, and
+decision support. Distinct from `EHR foundation models` (which is
+the *model architecture* thread) and from `Knowledge graphs &
+ontologies` (which is the *upstream ontology* thread) — this
+section is the *representation-choice-and-downstream-use* thread
+that sits between them. Prioritized sub-topics:
+- **Concept normalization and vocabulary mappings** — OMOP CDM
+  standard vocabularies (SNOMED, LOINC, RxNorm, ICD-9/10-CM,
+  ATC), UMLS crosswalks, ICD → phecode / phecodeX, HPO alignment
+  with EHR problem lists. Concept-embedding models (cui2vec,
+  Med-BERT, SapBERT, MedTok) and how their representations transfer
+  across sites.
+- **Structural and temporal representation of the patient timeline**
+  — MEDS / EHRSHOT / FEMR event schemas, FHIR resources, MIMIC-IV
+  timelines, visit-concept-ID handling, event sequencing choices
+  (irregular time, admissions as containers, medication-exposure
+  windows). Representation choices that leak or preserve label
+  information at prediction time.
+- **Patient-level and cohort-level knowledge graphs from EHR** —
+  patient-centric KG construction from codes + notes + labs, disease
+  trajectory graphs, comorbidity networks; graph-embedding methods
+  (GNN, node2vec, KG-BERT) applied to patient graphs. Explainability
+  of graph-derived predictions.
+- **NLP-derived representations from clinical notes** — LLM /
+  transformer-based concept extraction, negation and temporality
+  detection, HPO / SNOMED term assignment from free-text problem
+  lists and discharge summaries. Note-code fusion (notes-augmented
+  phecodes, LLM-extracted problems supplementing structured codes).
+- **Interoperability standards and their representational
+  consequences** — FHIR, USCDI, C-CDA, and how their design choices
+  shape what phenotypes are computable at national scale (Lemieux
+  et al. *JAMIA Open* 2026-07 as the reference framing paper;
+  N3C / OHDSI lineage).
+- **Applications to prioritize** — computable phenotyping / PheKB /
+  PheValuator, cohort discovery for target-trial emulation,
+  drug-safety signal detection, care-gap identification, treatment
+  response prediction, adverse-event surveillance. Especially
+  interested in representation-ablation studies that show *which
+  representation choice* drives downstream performance vs. the
+  model architecture.
+- **Fidelity, portability, and audit of representations** — how
+  representation choices drift across sites (BioVU vs. AoU vs.
+  MIMIC vs. UKB), calibration under site shift, and audits of
+  learned representations against clinical ground truth
+  (chart-review-validated).
 
 ### Knowledge graphs & ontologies
 HPO, SNOMED, biomedical KG construction for clinical reasoning.
